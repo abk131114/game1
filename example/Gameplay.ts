@@ -1,10 +1,13 @@
 import { Scene } from 'phaser';
+import { VirtualJoystick } from 'phaser-virtual-joystick';
 
 export class Gameplay extends Scene {
   camera: Phaser.Cameras.Scene2D.Camera;
   background: Phaser.GameObjects.Image;
 
   player: Phaser.GameObjects.Sprite;
+  playerX: number;
+  playerY: number;
 
   powerups: {
     speed: number;
@@ -21,7 +24,22 @@ export class Gameplay extends Scene {
     super('Gameplay');
   }
 
+  // -1 links/oben, 1 rechts/unten
+  movePlayer() {
+    this.player.x += this.powerups.speed * this.playerX;
+    this.player.y += this.powerups.speed * this.playerY;
+  }
+
   create() {
+    const joystick = new VirtualJoystick({ scene: this });
+
+    joystick.on('move', (data) => {
+      this.playerX = data.x;
+      this.playerY = data.y;
+    });
+
+    this.add.existing(joystick);
+
     this.camera = this.cameras.main;
     this.camera.setBackgroundColor(0x00ff00);
 
@@ -46,13 +64,16 @@ export class Gameplay extends Scene {
   }
 
   handleKeyboardInput() {
-    if (this.keys.w.isDown) { this.player.y -= 1; }
-    if (this.keys.a.isDown) { this.player.x -= 1; }
-    if (this.keys.s.isDown) { this.player.y += 1; }
-    if (this.keys.d.isDown) { this.player.x += 1; }
+    this.playerX = 0;
+    this.playerY = 0;
+    if (this.keys.w.isDown) { this.playerY -= 1; }
+    if (this.keys.a.isDown) { this.playerX -= 1; }
+    if (this.keys.s.isDown) { this.playerY += 1; }
+    if (this.keys.d.isDown) { this.playerX += 1; }
   }
 
   update() {
     this.handleKeyboardInput();
+    this.movePlayer();
   }
 }
