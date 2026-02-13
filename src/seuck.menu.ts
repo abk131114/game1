@@ -36,15 +36,14 @@ export enum ItemFlags {
 }
 
 export interface ItemRegistry {
-  toggle: ToggleItem;
-  submenu: SubmenuItem;
-  label: LabelItem;
-  action: ActionItem;
-  spacer: SpacerItem;
+  [ItemKind.Toggle]: ToggleItem;
+  [ItemKind.Submenu]: SubmenuItem;
+  [ItemKind.Label]: LabelItem;
+  [ItemKind.Action]: ActionItem;
+  [ItemKind.Spacer]: SpacerItem;
 }
 
-export type ItemData<K extends keyof ItemRegistry = keyof ItemRegistry> = {
-  type: K;
+export type ItemData<K extends ItemKind = ItemKind> = {
   item: ItemRegistry[K];
   flags: ItemFlags;
   userData: number;
