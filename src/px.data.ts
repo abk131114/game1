@@ -1,12 +1,13 @@
-import { Menu } from "./seuck.menu";
+import { MenuData, ItemFlags, ItemKind } from "./seuck.menu";
 
-export const menus: Menu.MenuData[] = [
+export const menus: MenuData[] = [
   { items: [
-    { item: { kind: Menu.ItemKind.Toggle, active: 'ONE PLAYER', inactive: 'TWO PLAYER' }, flags: Menu.ItemFlags.Selectable, userData: 0 },
-    { item: { kind: Menu.ItemKind.Submenu, textRef: 'START LEVEL' }, flags: Menu.ItemFlags.Selectable, userData: 0 },
-    { item: { kind: Menu.ItemKind.Submenu, textRef: 'OPTIONS' }, flags: Menu.ItemFlags.Selectable, userData: 0 },
-    { item: { kind: Menu.ItemKind.Spacer }, flags: Menu.ItemFlags.Selectable, userData: 0 },
-    { item: { kind: Menu.ItemKind.Action, textRef: 'START GAME' }, flags: Menu.ItemFlags.Selectable, userData: 0 },
+    { type: "toggle", item: { kind: ItemKind.Toggle, active: 'ONE PLAYER', inactive: 'TWO PLAYER' }, flags: ItemFlags.Selectable, userData: 0 },
+
+    // { item: { type: , kind: ItemKind.Submenu, textRef: 'START LEVEL' }, flags: ItemFlags.Selectable, userData: 0 },
+    // { item: { type: , kind: ItemKind.Submenu, textRef: 'OPTIONS' }, flags: ItemFlags.Selectable, userData: 0 },
+    // { item: { type: , kind: ItemKind.Spacer }, flags: ItemFlags.Selectable, userData: 0 },
+    // { item: { type: , kind: ItemKind.Action, textRef: 'START GAME' }, flags: ItemFlags.Selectable, userData: 0 },
   ] },
 
   { items: [
