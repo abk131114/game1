@@ -1,4 +1,5 @@
 import { Scene, GameObjects } from 'phaser';
+import { GameplayData } from '../Data';
 
 export class MainMenu extends Scene {
   background: GameObjects.Image;
@@ -19,7 +20,11 @@ export class MainMenu extends Scene {
     }).setOrigin(0.5);
 
     this.input.once('pointerdown', () => {
-      this.scene.start('Gameplay');
+      const data: GameplayData = {
+        level: 1
+      }
+
+      this.scene.start('Gameplay', data);
     });
   }
 }

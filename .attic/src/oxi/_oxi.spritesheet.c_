@@ -1,0 +1,228 @@
+// #include "oxi.spritesheet.components.h"
+// #include "oxi.spritesheet.systems.h"
+// #include "oxi.material.components.h"
+
+// #include <oxi/engine.h> // TODO (DK) more selective?
+
+// static struct oxi_meshdata *create_quad_meshdata( struct oxi_engine *engine, kinc_g4_vertex_structure_t *vs, unsigned width, unsigned height, unsigned columns, unsigned rows ) {
+//     struct oxi_meshdata *mesh = engine->mem.alloc(sizeof(*mesh), __FILE__, __LINE__);
+//     memset(mesh, 0, sizeof(*mesh));
+
+//     int stride = 3 + 2 + 3; // pos, uv, nor
+//     unsigned num_faces = 6; // actually indices
+
+//     oxi_geometry_t *geom = &mesh->geometry;
+//     kinc_g4_vertex_buffer_init(&geom->vertex_buffer[0], num_faces, vs, KINC_G4_USAGE_STATIC, 0);
+//     float *vb = kinc_g4_vertex_buffer_lock_all(&geom->vertex_buffer[0]);
+
+//     kinc_g4_index_buffer_init(&geom->index_buffer[0], num_faces, KINC_G4_INDEX_BUFFER_FORMAT_32BIT, KINC_G4_USAGE_STATIC);
+//     int *ibd = kinc_g4_index_buffer_lock_all(&geom->index_buffer[0]);
+
+//     float w2 = ((float)width / (float)columns) / 100.0f / 2.0f;
+//     float h = ((float)height / (float)rows) / 100.0f;
+
+//     float vertices[] = {
+//         -w2, 0, 0,
+//         -w2, h, 0,
+//         w2, 0, 0,
+//         w2, h, 0,
+//     };
+
+//     float uvs[] = {
+//         0,					0,
+//         1.0f / columns,		0,
+//         1.0f / columns,		1.0f / rows,
+//         0,					1.0f / rows,
+//     };
+
+//     float normals[] = {
+//         0, 1, 0,
+//     };
+
+//     // v, t, n
+//     int faces[] = {
+//         2, 0, 0,
+//         0, 1, 0,
+//         1, 2, 0,
+
+//         2, 0, 0,
+//         1, 2, 0,
+//         3, 3, 0
+//     };
+
+//     // TODO (DK) we could skip some vertices, only need 4 of 6?
+
+//     for (unsigned int f = 0; f < num_faces; ++f) {
+//         int v_idx = faces[f * 3 + 0];
+//         int t_idx = faces[f * 3 + 1];
+//         int n_idx = faces[f * 3 + 2];
+//         int vbi = f * stride;
+
+//         vb[vbi++] = vertices[3 * v_idx + 0];
+//         vb[vbi++] = vertices[3 * v_idx + 1];
+//         vb[vbi++] = vertices[3 * v_idx + 2];
+//         vb[vbi++] =       uvs[2 * t_idx + 0];
+//         vb[vbi++] = 1.f - uvs[2 * t_idx + 1];
+//         vb[vbi++] = normals[3 * n_idx + 0];
+//         vb[vbi++] = normals[3 * n_idx + 1];
+//         vb[vbi++] = normals[3 * n_idx + 2];
+//         ibd[f] = f;
+//     }
+
+//     kinc_g4_vertex_buffer_unlock_all(&geom->vertex_buffer[0]);
+//     kinc_g4_index_buffer_unlock_all(&geom->index_buffer[0]);
+
+//     geom->num_index_buffers = 1; // TODO (DK) correct?
+//     geom->count = num_faces; // TODO (DK) correct?
+
+//     return mesh;
+// }
+
+// static void add_spritesheet_material( ecs_world_t *world, ecs_entity_t entity,
+//     const char *atlas_uri, unsigned atlas_width, unsigned atlas_height,
+//     unsigned columns, unsigned rows
+// ) {
+//     struct oxi_engine *engine = ecs_singleton_get_mut(world, oxi_engine_ref_t)->engine;
+
+//     char material_name[OXI_MAX_ID_LENGTH];
+//     int material_name_length = snprintf(material_name, OXI_MAX_ID_LENGTH, "spritesheet-%s", atlas_uri);
+
+//     if (!(material_name_length > 0 && material_name_length < OXI_MAX_ID_LENGTH)) {
+//         engine->log.error("failed to create the spritesheet material name");
+//         return;
+//     }
+
+//     struct oxi_materialdata *material = oxi_materialdata_lookup(engine, material_name);
+
+// 	if (material == NULL) {
+//         size_t n = strlen(atlas_uri);
+//         char *filename_copy = engine->mem.alloc(n + 1, __FILE__, __LINE__);
+//         snprintf(filename_copy, n + 1, "%s", atlas_uri);
+
+//         struct oxi_materialdata_raw raw = {
+//             .shader_id = "oxi-default",
+
+//             .num_contexts = 1,
+//             .contexts = {{
+//                 .num_bind_constants = 0,
+//                 .bind_constants = { 0 },
+
+//                 .num_bind_textures = 0,
+//                 .bind_textures = { 0 },
+
+//                 .num_bind_textures = 1,
+//                 .bind_textures = {
+//                     { .filename = filename_copy }
+//                 },
+//             }},
+//         };
+
+//         material = oxi_create_material(engine, &raw);
+// 	    oxi_materialdata_cache(engine, material_name, material);
+//     }
+
+//     char mesh_name[OXI_MAX_ID_LENGTH];
+//     int mesh_name_length = snprintf(mesh_name, OXI_MAX_ID_LENGTH, "spritesheet-%i-%i", atlas_width, atlas_height);
+
+//     if (!(mesh_name_length > 0 && mesh_name_length < OXI_MAX_ID_LENGTH)) {
+//         engine->log.error("failed to create the spritesheet mesh name");
+//         return;
+//     }
+
+//     struct oxi_meshdata *mesh = oxi_meshdata_lookup(engine, mesh_name);
+
+//     if (mesh == NULL) {
+//         mesh = create_quad_meshdata(engine, &material->shader->contexts.structure, atlas_width, atlas_height, columns, rows);
+//         oxi_meshdata_cache(engine, mesh_name, mesh);
+//     }
+
+//     ecs_set(world, entity, oxi_meshobject_t, { .mesh = mesh, .num_materials = 1, .materials = { material } });
+//     ecs_set(world, entity, oxi_Tilesheet, { .ox = 0.0f, .oy = 0.0f });
+// }
+
+// static void spritesheet_initializer_observer( ecs_iter_t *it ) {
+//     ecs_world_t *world = it->world;
+
+//     for (int i = 0; i < it->count; ++i) {
+//         oxi_Spritesheet *sheet = &ecs_field(it, oxi_Spritesheet, 1)[i];
+//         // create scene item / or canvas item
+//         add_spritesheet_material(world, it->entities[i], sheet->uri, sheet->width, sheet->height, sheet->columns, sheet->rows);
+//     }
+// }
+
+// static void spritesheet_playrequest_observer( ecs_iter_t *it ) {
+//     for (int i = 0; i < it->count; ++i) {
+//         oxi_SpritesheetAnimationPlayRequest *req = &ecs_field(it, oxi_SpritesheetAnimationPlayRequest, 1)[i];
+//         // oxi_spritesheet_animation_play(it->world, it->entities[i], req->action_id);
+
+//         const oxi_SpritesheetAnimation *anim = ecs_get_pair_second(it->world, it->entities[i], req->action_id, oxi_SpritesheetAnimation);
+
+//         if (anim == NULL) {
+//             // TODO (DK) log error
+//             return;
+//         }
+
+//         unsigned frame_index = 0; // oxi_math_random_range_i(0, anim->num_frames);
+
+//         ecs_set(it->world, it->entities[i], oxi_SpritesheetAnimationState, {
+//             .action_id = req->action_id,
+//             .frame_index = frame_index,
+//             .frame = anim->frames[frame_index],
+//             .elapsed = 0,
+//             .repeat = 0,
+//         });
+
+//     }
+// }
+
+// static void spritesheet_animation_progress_system( ecs_iter_t *it ) {
+//     for (int i = 0; i < it->count; ++i) {
+//         oxi_SpritesheetAnimationState *state = &ecs_field(it, oxi_SpritesheetAnimationState, 1)[i];
+//         const oxi_SpritesheetAnimation *anim = ecs_get_pair_second(it->world, it->entities[i], state->action_id, oxi_SpritesheetAnimation);
+
+//         state->elapsed += 1;
+
+//         if (state->elapsed > anim->speed) {
+//             state->elapsed = 0;
+//             state->frame_index += 1;
+
+//             if (state->frame_index >= anim->num_frames) {
+//                 if (anim->repeat < 0 || state->repeat < anim->repeat) {
+//                     state->frame_index = 0;
+//                     state->repeat += 1;
+//                 } else {
+//                     // TODO (DK) anim over event?
+//                     //  - probably not; depending on some `animation-finished` event to trigger other stuff doesn't sound too smart to me
+//                 }
+//             }
+
+//             if (state->frame_index < anim->num_frames) {
+//                 state->frame = anim->frames[state->frame_index];
+//             } else {
+//                 // TODO (DK) warning: no frames?
+//                 state->frame = 0;
+//             }
+//         }
+//     }
+// }
+
+// static void spriteanimation_tilesheet_offset_update_system( ecs_iter_t *it ) {
+//     for (int i = 0; i < it->count; ++i) {
+//         oxi_Tilesheet *ts = &ecs_field(it, oxi_Tilesheet, 1)[i];
+//         const oxi_SpritesheetAnimationState *state = &ecs_field(it, oxi_SpritesheetAnimationState, 2)[i];
+//         const oxi_Spritesheet *sheet = &ecs_field(it, oxi_Spritesheet, 3)[i];
+//         ts->ox = (state->frame % sheet->columns) * (1.0f / sheet->columns);
+//         ts->oy = (state->frame / sheet->columns) * (1.0f / sheet->rows);
+//     }
+// }
+
+// void oxiSpritesheetSystemsImport( ecs_world_t *world ) {
+//     ECS_MODULE(world, oxi_SpritesheetSystems);
+//     // ecs_set_name_prefix(world, "oxi_");
+
+//     ECS_OBSERVER(world, spritesheet_initializer_observer, EcsOnSet, oxi_Spritesheet);
+//     ECS_OBSERVER(world, spritesheet_playrequest_observer, EcsOnSet, oxi_SpritesheetAnimationPlayRequest);
+
+//     ECS_SYSTEM(world, spritesheet_animation_progress_system, EcsOnUpdate, oxi_SpritesheetAnimationState);
+//     ECS_SYSTEM(world, spriteanimation_tilesheet_offset_update_system, EcsOnUpdate, oxi_Tilesheet, oxi_SpritesheetAnimationState, oxi_Spritesheet);
+// }
