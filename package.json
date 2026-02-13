@@ -4,8 +4,10 @@
     "build": "vite build --config vite/config.prod.mjs"
   },
   "devDependencies": {
+    "@assetpack/core": "^1.7.0",
     "typescript": "~5.7.2",
-    "vite": "^6.3.1"
+    "vite": "^6.3.1",
+    "vite-static-assets-plugin": "^1.2.2"
   },
   "dependencies": {
     "phaser": "^3.90.0",
