@@ -1,13 +1,15 @@
 import { Scene, GameObjects } from 'phaser';
-import { GameplayData } from '../Data';
-import { createMenuObjects } from '../../seuck.menu.phaser';
+// import { GameplayData } from '../Data';
+import { createMenu, Menu, updateMenu } from '../../seuck.menu.phaser';
 import { menus } from '../../px.data';
+
+// use rex stuff? https://rexrainbow.github.io/phaser3-rex-notes/docs/site/plugin-list/
 
 export class MainMenu extends Scene {
   background: GameObjects.Image;
   logo: GameObjects.Image;
   title: GameObjects.Text;
-  items: GameObjects.GameObject[];
+  menu: Menu;
 
   constructor() {
     super('MainMenu');
@@ -16,24 +18,19 @@ export class MainMenu extends Scene {
   create() {
     this.background = this.add.image(512, 384, 'background');
 
-    this.items = createMenuObjects(this.add, menus[0]);
+    const ctx = { x: this.game.renderer.width / 2, y: 100 }
+    this.menu = createMenu(ctx, this, menus[0]);
 
-    // this.logo = this.add.image(512, 300, 'logo');
-    // this.title = this.add.text(512, 460, 'Main Menu', {
-    //   fontFamily: 'Arial Black', fontSize: 38, color: '#ffffff',
-    //   stroke: '#000000', strokeThickness: 8,
-    //   align: 'center'
-    // }).setOrigin(0.5);
+    // this.input.once('pointerdown', () => {
+    //   const data: GameplayData = {
+    //     level: 1
+    //   }
 
-    this.input.once('pointerdown', () => {
-      const data: GameplayData = {
-        level: 1
-      }
-
-      this.scene.start('Gameplay', data);
-    });
+    //   this.scene.start('Gameplay', data);
+    // });
   }
 
   update(_time: number, _delta: number) {
+    updateMenu(this.menu, this);
   }
 }

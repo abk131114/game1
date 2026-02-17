@@ -1,32 +1,123 @@
-import { GameObjects } from "phaser";
-import { ItemData, MenuData, ItemKind } from "./seuck.menu";
+import { GameObjects, Scene, Tweens } from "phaser";
+import { MenuData, ItemKind, ItemData, ItemFlags } from "./seuck.menu";
 
-type ItemBuilder = (factory: GameObjects.GameObjectFactory, item: any) => GameObjects.GameObject;
+type BuilderContext = {
+  x: number;
+  y: number;
+}
+
+type ItemBuilder = (ctx: BuilderContext, scene: Scene, item: any) => GameObjects.Text;
+
+function addSelectableFlag(obj: GameObjects.Text, item: any) {
+  obj.setData('selectable', item.flags & ItemFlags.Selectable)
+}
 
 const ItemBuilders: Record<ItemKind, ItemBuilder> = {
-  [ItemKind.Toggle]: (factory, item) => factory.text(0, 0, item.active),
-  [ItemKind.Action]: (factory, item) => factory.text(0, 0, item.textRef),
-  [ItemKind.Label]: (factory, item) => factory.text(0, 0, item.textRef),
-  [ItemKind.Spacer]: (factory, _item) => factory.text(0, 0, ''),
-  [ItemKind.Submenu]: (factory, item) => factory.text(0, 0, item.textRef),
+  [ItemKind.Toggle]: (ctx, scene, item) => {
+    const obj = scene.add.text(ctx.x, ctx.y += 16, item.active);
+    addSelectableFlag(obj, item);
+    return obj;
+  },
+
+  [ItemKind.Action]: (ctx, scene, item) => {
+    const obj = scene.add.text(ctx.x, ctx.y += 16, item.textRef);
+    addSelectableFlag(obj, item);
+    return obj;
+  },
+
+  [ItemKind.Label]: (ctx, scene, item) => {
+    const obj = scene.add.text(ctx.x, ctx.y += 16, item.textRef);
+    addSelectableFlag(obj, item);
+    return obj;
+  },
+
+  [ItemKind.Spacer]: (ctx, scene, item) => {
+    const obj = scene.add.text(ctx.x, ctx.y += 16, '');
+    addSelectableFlag(obj, item);
+    return obj;
+  },
+
+  [ItemKind.Submenu]: (ctx, scene, item) => {
+    const obj = scene.add.text(ctx.x, ctx.y += 16, item.textRef);
+    addSelectableFlag(obj, item);
+    return obj;
+  },
+
 }
 
 export function registerItemBuilder(kind: ItemKind, handler: ItemBuilder): void {
   ItemBuilders[kind] = handler;
 }
 
-function createItemGameObject( factory: GameObjects.GameObjectFactory, kind: ItemKind, item: any ): GameObjects.GameObject {
-  const handler = ItemBuilders[kind];
+function createItemGameObject( ctx: BuilderContext, scene: Scene, item: ItemData ): GameObjects.Text {
+  const handler = ItemBuilders[item.item.kind];
+
   if (!handler) {
-    throw new Error(`No handler registered for ItemKind: ${kind}`);
+    throw new Error(`No handler registered for ItemKind: ${item.item.kind}`);
   }
-  return handler(factory, item);
+
+  return handler(ctx, scene, item.item);
 }
 
-export function createMenuItem( factory: GameObjects.GameObjectFactory, data: ItemData ) : GameObjects.GameObject {
-  return createItemGameObject(factory, data.item.kind, data.item);
+export function createMenu( ctx: BuilderContext, scene: Scene, menu: MenuData ) {
+  return {
+    selected: 0,
+    items: menu.items.map(item => createItemGameObject(ctx, scene, item))
+  }
 }
 
-export function createMenuObjects( factory: GameObjects.GameObjectFactory, menu: MenuData ) {
-  return menu.items.map(item => createMenuItem(factory, item));
+export type Menu = {
+  selected: number;
+  selectedTween?: Tweens.Tween;
+  items: GameObjects.Text[];
+}
+
+const TWEEN_CONFIG = {
+  alpha: 0,
+  duration: 256,
+  ease: 'Linear',
+  yoyo: true,
+  repeat: -1,
+}
+
+export function updateMenu( menu: Menu, scene: Scene ) {
+  if (!menu.selectedTween) {
+    menu.selectedTween = scene.tweens.add({ ...TWEEN_CONFIG, targets: [menu.items[menu.selected]] });
+  }
+}
+
+export function down( menu: Menu ) {
+  while (true) {
+    // menu.selectedTween.stop()
+    // menu.selectedTween.setToEnd()
+    menu.selectedTween?.complete();
+    menu.selectedTween?.stop()
+    menu.selectedTween = undefined;
+    menu.selected += 1;
+
+    if (menu.selected >= menu.items.length) {
+      menu.selected = 0;
+    }
+
+    if (menu.items[menu.selected].getData('selectable')) {
+      break;
+    }
+  }
+}
+
+export function up( menu: Menu ) {
+  while (true) {
+    menu.selectedTween?.complete();
+    menu.selectedTween?.stop()
+    menu.selectedTween = undefined;
+    menu.selected -= 1;
+
+    if (menu.selected < 0) {
+      menu.selected = menu.items.length - 1;
+    }
+
+    if (menu.items[menu.selected].getData('selectable')) {
+      break;
+    }
+  }
 }
