@@ -15,7 +15,8 @@ type MenuItem = {
 
 const BUILDERS = new Map<string, ItemBuilder>([
   [ItemKind.Toggle, (ctx, scene, data, item) => {
-    const obj = scene.add.text(ctx.x, ctx.y += 16, data.toggles[item.ref].active);
+    const ref = data.toggles[item.ref];
+    const obj = scene.add.text(ctx.x, ctx.y += 16, ref.on ? ref.onStr : ref.offStr);
     return { obj, data: item }
   }],
 
@@ -40,7 +41,7 @@ const BUILDERS = new Map<string, ItemBuilder>([
   }],
 ]);
 
-export function createMenuImpl( ctx: BuilderContext, scene: Scene, data: MenuData, menuIndex: number ) {
+export function createMenuItems( ctx: BuilderContext, scene: Scene, data: MenuData, menuIndex: number ) {
   const menuData = data.menus[menuIndex];
   const objects = [];
 
@@ -57,10 +58,21 @@ export function createMenuImpl( ctx: BuilderContext, scene: Scene, data: MenuDat
   return objects;
 }
 
-export function createMenu( ctx: BuilderContext, scene: Scene, data: MenuData, menuIndex: number ) {
-  return {
+type Callbacks =   {
+  toggle: (menu: Menu, item: ItemData) => void;
+  activate: (menu: Menu, item: ItemData) => number;
+}
+
+export function createMenu( ctx: BuilderContext, scene: Scene, data: MenuData, menuIndex: number, callbacks: Callbacks ) {
+  const menu = {
+    startContext: ctx,
+    scene,
+    data,
+    callbacks: callbacks,
+
     selected: 0,
-    items: createMenuImpl(ctx, scene, data, menuIndex),
+    items: createMenuItems({ ...ctx }, scene, data, menuIndex),
+
     keys: {
       up: scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.W),
       left: scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.A),
@@ -69,9 +81,18 @@ export function createMenu( ctx: BuilderContext, scene: Scene, data: MenuData, m
       activate: scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE),
     },
   }
+
+  selectFirstItem(menu);
+
+  return menu;
 }
 
 export type Menu = {
+  startContext: BuilderContext;
+  scene: Scene,
+  data: MenuData,
+  callbacks: Callbacks,
+
   selected: number;
   selectedTween?: Tweens.Tween;
   items: MenuItem[];
@@ -155,9 +176,58 @@ function up( menu: Menu ) {
   }
 }
 
+function selectFirstItem( menu: Menu ) {
+  stopTween(menu);
+  menu.selected = 0;
+
+  while (true) {
+    if (menu.selected >= menu.items.length) {
+      break;
+    }
+
+    if (menu.items[menu.selected].data.flags & ItemFlags.Selectable) {
+      break;
+    }
+
+    menu.selected += 1;
+  }
+}
+
 const LEFT_ACTIONS = new Map<string, (menu: Menu) => void>();
+
 const RIGHT_ACTIONS = new Map<string, (menu: Menu) => void>();
-const ACTIVATIONS = new Map<string, (menu: Menu) => void>();
+
+function openMenu( menu: Menu, idx: number ) {
+  menu.items.forEach(item => item.obj.destroy());
+  menu.selected = 0;
+  menu.items = createMenuItems({...menu.startContext}, menu.scene, menu.data, idx);
+  selectFirstItem(menu);
+}
+
+const ACTIVATIONS = new Map<string, (menu: Menu, item: MenuItem) => void>([
+  [ItemKind.Action, (menu, item) => {
+    // const action = menu.data.actions[item.data.ref];
+    const r = menu.callbacks.activate(menu, item.data);
+
+    if (r < 0) {
+      return;
+    }
+
+    openMenu(menu, r);
+  }],
+
+  [ItemKind.Submenu, (menu, item) => {
+    const submenuItem = menu.data.submenus[item.data.ref];
+    openMenu(menu, submenuItem.menuIdx);
+  }],
+
+  [ItemKind.Toggle, (menu, item) => {
+    const toggle = menu.data.toggles[item.data.ref];
+    toggle.on = !toggle.on;
+    item.obj.text = toggle.on ? toggle.onStr : toggle.offStr;
+    menu.callbacks.toggle(menu, item.data);
+  }],
+]);
 
 function left( menu: Menu ) {
   const item = menu.items[menu.selected];
@@ -182,6 +252,6 @@ function activate( menu: Menu ) {
   const action = ACTIVATIONS.get(item.data.kind);
 
   if (action) {
-    action(menu);
+    action(menu, item);
   }
 }

@@ -11,6 +11,12 @@ export class MainMenu extends Scene {
   title: GameObjects.Text;
   menu: Menu;
 
+  gameplaySettings: {
+    coop: boolean;
+    startLevel: number;
+    ship1: string;
+    ship2: string;
+  }
   constructor() {
     super('MainMenu');
   }
@@ -18,16 +24,45 @@ export class MainMenu extends Scene {
   create() {
     this.background = this.add.image(512, 384, 'background');
 
+    // TODO (DK) map this to menu items so it's not defined twice
+    this.gameplaySettings = {
+      coop: false,
+      startLevel: 1,
+      ship1: 'light',
+      ship2: 'light',
+    }
+
     const ctx = { x: this.game.renderer.width / 2, y: this.game.renderer.height / 2 }
-    this.menu = createMenu(ctx, this, Menus, 0);
 
-    // this.input.once('pointerdown', () => {
-    //   const data: GameplayData = {
-    //     level: 1
-    //   }
+    this.menu = createMenu(ctx, this, Menus, 0, {
+      toggle: (_menu, item) => {
+        switch (item.ref) {
+          case 0: this.gameplaySettings.coop = !this.gameplaySettings.coop;
+        }
+      },
 
-    //   this.scene.start('Gameplay', data);
-    // });
+      activate: (_menu, item) => {
+        switch (item.ref) {
+          case 0:
+            this.scene.start('Gameplay', this.gameplaySettings);
+            break;
+
+          case 1:
+            this.gameplaySettings.startLevel = 1;
+            return 0;
+
+          case 2:
+            this.gameplaySettings.startLevel = 2;
+            return 0;
+
+          case 3:
+            this.gameplaySettings.startLevel = 3;
+            return 0;
+        }
+
+        return -1;
+      },
+    });
   }
 
   update(_time: number, _delta: number) {

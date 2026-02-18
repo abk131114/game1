@@ -16,12 +16,14 @@ export type ActionItemData = {
 }
 
 export type ToggleItemData = {
-  active: string;
-  inactive: string;
+  onStr: string;
+  offStr: string;
+  on: boolean;
 }
 
 export type SubmenuItemData = {
   textRef: string;
+  menuIdx: number;
 }
 
 export type LabelItemData = {
