@@ -1,15 +1,43 @@
-import { MenuData, ItemFlags, ItemKind } from "./seuck.menu";
+import { MenuItemsData, ItemFlags, ItemKind, ToggleItemData, SubmenuItemData, SpacerItemData, ActionItemData, ItemData, LabelItemData, MenuData } from "./seuck.menu";
 
-export const menus: MenuData[] = [
-  { items: [
-    { item: { kind: ItemKind.Toggle, active: 'ONE PLAYER', inactive: 'TWO PLAYER' }, flags: ItemFlags.Selectable },
-    { item: { kind: ItemKind.Submenu, textRef: 'START LEVEL' }, flags: ItemFlags.Selectable },
-    { item: { kind: ItemKind.Submenu, textRef: 'OPTIONS' }, flags: ItemFlags.Selectable },
-    { item: { kind: ItemKind.Spacer }, flags: ItemFlags.Selectable },
-    { item: { kind: ItemKind.Action, textRef: 'START GAME' }, flags: ItemFlags.Selectable },
-  ] },
-
-  { items: [
-
-  ] },
+const actions: ActionItemData[] = [
+  { textRef: 'START GAME' },
 ];
+
+const labels: LabelItemData[] = [
+];
+
+const spacer: SpacerItemData[] = [
+  {},
+];
+
+const submenus: SubmenuItemData[] = [
+  { textRef: 'START LEVEL' },
+  { textRef: 'OPTIONS' },
+];
+
+const toggles: ToggleItemData[] = [
+  { active: 'ONE PLAYER', inactive: 'TWO PLAYER' },
+];
+
+const items: ItemData[] = [
+  { kind: ItemKind.Toggle, ref: 0, flags: ItemFlags.Selectable },
+  { kind: ItemKind.Submenu, ref: 0, flags: ItemFlags.Selectable },
+  { kind: ItemKind.Submenu, ref: 1, flags: ItemFlags.Selectable },
+  { kind: ItemKind.Spacer, ref: 0, flags: ItemFlags.None },
+  { kind: ItemKind.Action, ref: 0, flags: ItemFlags.Selectable },
+];
+
+const menus: MenuItemsData[] = [
+  { startIndex: 0, endIndex: 4 },
+];
+
+export default {
+  actions,
+  toggles,
+  submenus,
+  labels,
+  spacer,
+  items,
+  menus,
+} satisfies MenuData;

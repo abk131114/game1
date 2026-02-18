@@ -1,59 +1,55 @@
 export enum ItemKind {
-  Label, Toggle, Submenu, Action, Spacer
+  Action = 'action',
+  Label = 'label',
+  Spacer = 'spacer',
+  Submenu = 'submenu',
+  Toggle = 'toggle',
 }
 
 export enum ItemFlags {
-  Selectable
+  None = 0,
+  Selectable = 1,
 }
 
-interface BasicItem {
-  flags: ItemFlags;
+export type ActionItemData = {
+  textRef: string;
 }
 
-interface ToggleItem extends BasicItem {
-  kind: ItemKind.Toggle;
+export type ToggleItemData = {
   active: string;
   inactive: string;
 }
 
-interface SubmenuItem extends BasicItem {
-  kind: ItemKind.Submenu;
+export type SubmenuItemData = {
   textRef: string;
 }
 
-interface ActionItem extends BasicItem {
-  kind: ItemKind.Action;
+export type LabelItemData = {
   textRef: string;
 }
 
-interface LabelItem extends BasicItem {
-  kind: ItemKind.Label;
-  textRef: string;
+export type SpacerItemData = {
 }
 
-interface SpacerItem extends BasicItem {
-  kind: ItemKind.Spacer;
+export type ItemData = {
+  kind: string;
+  ref: number;
+  flags: ItemFlags;
 }
 
-// export enum ActionKind {
-//   Navigate, Activate
-// }
-
-export interface ItemRegistry {
-  [ItemKind.Toggle]: ToggleItem;
-  [ItemKind.Submenu]: SubmenuItem;
-  [ItemKind.Label]: LabelItem;
-  [ItemKind.Action]: ActionItem;
-  [ItemKind.Spacer]: SpacerItem;
-}
-
-export type ItemData<K extends ItemKind = ItemKind> = {
-  item: ItemRegistry[K];
-}
-
-export type MenuData<K extends ItemKind = ItemKind> = {
-  items: ItemData<K>[];
-  // from: number;
-  // to: number;
+export type MenuItemsData = {
+  // items: ItemData[];
+  startIndex: number;
+  endIndex: number;
   // default_selection: number;
+}
+
+export type MenuData = {
+  actions: ActionItemData[];
+  toggles: ToggleItemData[];
+  submenus: SubmenuItemData[];
+  labels: LabelItemData[];
+  spacer: SpacerItemData[];
+  items: ItemData[];
+  menus: MenuItemsData[];
 }

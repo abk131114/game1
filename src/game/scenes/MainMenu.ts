@@ -1,7 +1,7 @@
 import { Scene, GameObjects } from 'phaser';
 // import { GameplayData } from '../Data';
 import { createMenu, Menu, updateMenu } from '../../seuck.menu.phaser';
-import { menus } from '../../px.data';
+import Menus from '../../px.data';
 
 // use rex stuff? https://rexrainbow.github.io/phaser3-rex-notes/docs/site/plugin-list/
 
@@ -18,8 +18,8 @@ export class MainMenu extends Scene {
   create() {
     this.background = this.add.image(512, 384, 'background');
 
-    const ctx = { x: this.game.renderer.width / 2, y: 100 }
-    this.menu = createMenu(ctx, this, menus[0]);
+    const ctx = { x: this.game.renderer.width / 2, y: this.game.renderer.height / 2 }
+    this.menu = createMenu(ctx, this, Menus, 0);
 
     // this.input.once('pointerdown', () => {
     //   const data: GameplayData = {
